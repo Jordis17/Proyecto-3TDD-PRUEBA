@@ -50,16 +50,9 @@ Restricciones principales:
 
 ## 4. Diagrama de primer nivel
 
-```mermaid
-flowchart LR
-    BTN["Botones BTNU/BTND/BTNL/BTNR/BTNC<br/>CPU RESET, SW0"] --> SYS
-    CLK["Reloj 100 MHz"] --> SYS
-    PC["Aplicación de PC<br/>(Jugador 2)"] <-->|UART 115200| SYS
-    SYS["Sistema Batalla Naval<br/>en FPGA"] --> VGA["Monitor VGA"]
-    SYS --> SEG["Displays 7 segmentos"]
-    SYS --> LED["LED"]
-    SYS --> AUD["Salida de audio"]
-```
+![Diagrama de primer nivel](FIGURAS/nivel1.png)
+
+**Figura 1.** Diagrama de primer nivel: el sistema como un solo bloque con sus entradas y salidas. El archivo editable es `FIGURAS/Pry3_Nivel_1_2.drawio`.
 
 **Objetivo:** permitir una partida de Batalla Naval entre un jugador local y uno remoto.
 
@@ -71,21 +64,9 @@ flowchart LR
 
 ## 5. Diagrama de segundo nivel
 
-```mermaid
-flowchart LR
-    CLK["Generación de reloj<br/>(PLL)"] -->|clk_sys, clk_pix, rst| CPU
-    ROM["ROM de programa"] -->|ProgIn| CPU["Procesador RV32I"]
-    CPU -->|ProgAddress| ROM
-    CPU -->|DataAddress, DataOut, we| BUS["Decodificador de direcciones<br/>y multiplexor de lectura"]
-    BUS -->|DataIn| CPU
-    BUS <--> RAM["RAM de datos"]
-    BUS <--> UART["UART"]
-    BUS <--> IN["Entradas J1"]
-    BUS <--> SEG["Displays"]
-    BUS <--> LED["LED"]
-    BUS <--> BUZ["Buzzer"]
-    BUS <--> VGA["VGA"]
-```
+![Diagrama de segundo nivel](FIGURAS/nivel2.png)
+
+**Figura 2.** Diagrama de segundo nivel. La ROM se conecta al procesador por el bus de programa (solo lectura). La RAM y todos los periféricos comparten el bus de datos a través del decodificador de direcciones; cada periférico indica su dirección base. El PLL entrega `clk_sys` y el reinicio a todo el sistema y `clk_pix` al VGA.
 
 | Bloque | Objetivo | Entradas | Salidas |
 |---|---|---|---|
