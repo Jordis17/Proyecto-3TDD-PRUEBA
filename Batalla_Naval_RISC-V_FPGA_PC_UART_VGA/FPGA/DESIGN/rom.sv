@@ -15,7 +15,7 @@
 // =====================================================================
 
 module rom #(
-    parameter string INIT_FILE = "programa.mem"
+    parameter INIT_FILE = "programa.mem"
 ) (
     input  logic [31:0] addr_i,
     output logic [31:0] data_o
