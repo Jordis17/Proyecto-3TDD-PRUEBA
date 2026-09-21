@@ -1,0 +1,34 @@
+# ---- Vivado: proyecto y artefactos generados ----
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+*.gen/
+*.xpr
+.Xil/
+*.jou
+*.log
+*.str
+*.pb
+*.wdb
+*.dcp
+*.bit
+*.bin
+*.ltx
+xsim.dir/
+webtalk*
+dfx_runtime.txt
+vivado_pid*.zip
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ---- Sistema operativo / editores ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
