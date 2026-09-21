@@ -135,74 +135,74 @@ _start:
 
     # ---- saltos condicionales (1 = salto tomado) ----
     addi t0, zero, 1
-    beq  a0, a0, 1f          # 32 beq iguales              -> 1
+    beq  a0, a0, salto_1          # 32 beq iguales              -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_1:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    beq  a0, a1, 1f          # 33 beq distintos            -> 0
+    beq  a0, a1, salto_2          # 33 beq distintos            -> 0
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_2:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    bne  a0, a1, 1f          # 34 bne distintos            -> 1
+    bne  a0, a1, salto_3          # 34 bne distintos            -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_3:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    bne  a0, a0, 1f          # 35 bne iguales              -> 0
+    bne  a0, a0, salto_4          # 35 bne iguales              -> 0
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_4:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    blt  a1, a0, 1f          # 36 blt -3 < 5               -> 1
+    blt  a1, a0, salto_5          # 36 blt -3 < 5               -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_5:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    blt  a0, a1, 1f          # 37 blt 5 < -3               -> 0
+    blt  a0, a1, salto_6          # 37 blt 5 < -3               -> 0
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_6:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    blt  a6, a4, 1f          # 38 blt 0x80000000 < 1 (desborda la resta) -> 1
+    blt  a6, a4, salto_7          # 38 blt 0x80000000 < 1 (desborda la resta) -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_7:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    bge  a0, a1, 1f          # 39 bge 5 >= -3              -> 1
+    bge  a0, a1, salto_8          # 39 bge 5 >= -3              -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_8:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    bge  a1, a0, 1f          # 40 bge -3 >= 5              -> 0
+    bge  a1, a0, salto_9          # 40 bge -3 >= 5              -> 0
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_9:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    bge  a0, a0, 1f          # 41 bge 5 >= 5               -> 1
+    bge  a0, a0, salto_10          # 41 bge 5 >= 5               -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_10:  sw   t0, 0(s0)
     addi s0, s0, 4
     addi t0, zero, 1
-    bge  a4, a6, 1f          # 42 bge 1 >= 0x80000000      -> 1
+    bge  a4, a6, salto_11          # 42 bge 1 >= 0x80000000      -> 1
     addi t0, zero, 0
-1:  sw   t0, 0(s0)
+salto_11:  sw   t0, 0(s0)
     addi s0, s0, 4
 
     # ---- salto hacia atras (lazo de 5 vueltas) ----
     addi t0, zero, 0
     addi t1, zero, 5
-2:  addi t0, t0, 1
-    blt  t0, t1, 2b          # 43 blt hacia atras          -> 5
+lazo_atras:  addi t0, t0, 1
+    blt  t0, t1, lazo_atras          # 43 blt hacia atras          -> 5
     sw   t0, 0(s0)
     addi s0, s0, 4
 
     # ---- jal: enlace y salto ----
-    jal  ra, 3f              # ra = direccion de la siguiente instruccion
+    jal  ra, enlace_1        # ra = direccion de la siguiente instruccion
     addi t2, zero, 99        # nunca se ejecuta
-3:  jal  t1, 4f              # t1 = direccion de 4f
-4:  sub  t0, t1, ra          # 44 jal: diferencia de enlaces -> 8
+enlace_1:  jal  t1, enlace_2              # t1 = direccion de enlace_2
+enlace_2:  sub  t0, t1, ra          # 44 jal: diferencia de enlaces -> 8
     sw   t0, 0(s0)
     addi s0, s0, 4
 
