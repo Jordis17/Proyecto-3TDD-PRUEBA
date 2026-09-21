@@ -253,7 +253,16 @@ El periférico entrega niveles, no pulsos. El programa detecta cada pulsación c
 |---|---|---|---|
 | `00` | DATOS | L/E | `[3:0]` dígito 0, `[7:4]` dígito 1, `[11:8]` dígito 2, `[15:12]` dígito 3, en BCD. `[31:16]` sin uso |
 
-Valor tras reinicio: 0. El programa escribe las victorias del J1 en los dígitos 3–2 y las del J2 en los dígitos 1–0. Un nibble mayor a 9 apaga ese dígito. Los otros cuatro dígitos de la tarjeta quedan apagados. El periférico multiplexa los cuatro dígitos a 250 Hz (un dígito por milisegundo), como en el Proyecto 2.
+Valor tras reinicio: 0. El programa escribe las victorias del J1 en los dígitos 3–2 y las del J2 en los dígitos 1–0. Un nibble mayor a 9 apaga ese dígito.
+
+| Dígito | Ánodo | Muestra |
+|---|---|---|
+| 3 | AN5 | Decenas del J1 |
+| 2 | AN4 | Unidades del J1 |
+| 1 | AN1 | Decenas del J2 |
+| 0 | AN0 | Unidades del J2 |
+
+Los contadores de cada jugador quedan en bloques distintos de la tarjeta para que no se lean como un solo número de cuatro cifras; AN2, AN3, AN6 y AN7 quedan apagados. El periférico multiplexa los cuatro dígitos a 250 Hz (un dígito por milisegundo), como en el Proyecto 2.
 
 ### 7.6. LED de estado — `0x0001_0138`
 
@@ -276,15 +285,15 @@ Valor tras reinicio: 0. El hardware solo copia el registro a los LED; el signifi
 | `00` | CONTROL | E | `[2:0]` evento: escribir un valor distinto de 0 inicia ese sonido |
 | `00` | ESTADO | L | `[0]` 1 mientras suena |
 
-| Evento | Sonido |
-|---|---|
-| 1 | Impacto |
-| 2 | Fallo |
-| 3 | Barco hundido |
-| 4 | Colocación inválida |
-| 5 | Victoria |
+| Evento | Sonido | Duración |
+|---|---|---|
+| 1 Impacto | 2 kHz | 100 ms |
+| 2 Fallo | 500 Hz | 150 ms |
+| 3 Barco hundido | 3 kHz → 2 kHz → 3 kHz | 80 ms cada tono |
+| 4 Colocación inválida | 250 Hz | 250 ms |
+| 5 Victoria | 2 kHz → 2,5 kHz → 3 kHz | 150 ms cada tono |
 
-Las frecuencias y duraciones exactas se definen en el diseño del módulo (se reutiliza el generador de tonos del Proyecto 2 con nuevos eventos). El sonido sale por la salida de audio PWM de la tarjeta (pines `AUD_PWM` y `AUD_SD`), porque la Nexys 4 no trae zumbador. Si se pide un sonido mientras otro está sonando, el nuevo reemplaza al anterior.
+Se reutiliza el generador de tonos del Proyecto 2 con estos eventos. El impacto es agudo y corto, el fallo grave, el hundido alterna dos tonos, la colocación inválida es el más grave y largo, y la victoria sube de tono. El sonido sale por la salida de audio PWM de la tarjeta (pines `AUD_PWM` y `AUD_SD`), porque la Nexys 4 no trae zumbador. Si se pide un sonido mientras otro está sonando, el nuevo reemplaza al anterior.
 
 ### 7.8. UART — `0x0001_0040`
 
@@ -703,19 +712,21 @@ Vuelta del lazo principal:
 
 | Rutina | Entrada | Salida | Descripción |
 |---|---|---|---|
-| `nueva_partida` | — | — | Limpia `0x2000–0x22FF`, carga casillas restantes 4/3/2, limpia la pantalla, dibuja HUD y tableros, LED de colocación, envía `#C` |
+| `nueva_partida` | — | — | Etiqueta a la que se salta al arrancar y con `BTN_RST`: limpia `0x2000–0x22FF`, carga casillas restantes 4/3/2, limpia la pantalla, dibuja HUD y tableros, LED de colocación, envía `#C` |
 | `leer_pulsaciones` | — | `a0` = pulsaciones nuevas | Lee entradas, compara con `0x2250` y actualiza esa variable |
 | `validar_colocacion` | `a0` jugador, `a1` barco, `a2` fila, `a3` columna, `a4` orientación | `a0`: 0 válida, 1 fuera del tablero, 2 traslape, 3 ya colocado | Revisa límites y las casillas que ocuparía el barco |
 | `colocar_barco` | mismos que la anterior | — | Escribe el barco en el tablero y marca la máscara de colocados |
 | `procesar_disparo` | `a0` jugador que dispara, `a1` fila, `a2` columna | `a0`: 0 repetido, 1 fallo, 2 impacto, 3 hundido | Aplica el disparo sobre el tablero rival (sección 8.2) y actualiza contadores. La usan los dos jugadores |
-| `dibujar_casilla` | `a0` tablero (0 propio, 1 rival), `a1` fila, `a2` columna, `a3` palabra de video | — | Calcula el tile y escribe la memoria de video |
-| `escribir_texto` | `a0` índice del primer tile, `a1` dirección de una lista de códigos en RAM o códigos en registros | — | Escribe símbolos del HUD |
-| `uart_recibir` | — | `a0` = 1 si hay trama completa | Lee un byte si hay, lo pasa al receptor de tramas |
-| `uart_enviar_byte` | `a0` byte | — | Espera a que `send` esté libre, escribe TX y lanza la transmisión |
-| `uart_enviar_trama` | caracteres en `a0–a5`, `a6` largo | — | Envía `#`, los caracteres y `\n` |
-| `sonar` | `a0` evento | — | Escribe el registro del buzzer |
+| `resultado_disparo` | `a0` tirador, `a1` fila, `a2` columna, `a3` resultado | — | Sonido, trama `#R`/`#E`, pantalla, y victoria o cambio de turno |
+| `dibujar_tablero_j1`, `dibujar_tablero_j2` | — | — | Redibujan cada tablero recorriendo la RAM y la memoria de video con punteros; el rival sin barcos ocultos |
+| `simbolo` | `a0` índice del tile, `a1` código, `a2` color | `a0` tile siguiente | Escribe un símbolo del HUD |
+| `uart_recibir` | — | `a0`: 0 nada, 1 trama `#P`, 2 trama `#D` | Lee un byte si hay y lo pasa al receptor de tramas |
+| `enviar_car` | `a0` byte | — | Espera a que `send` esté libre, escribe TX y lanza la transmisión |
+| `enviar_trama` | `a6` tipo, `a7` cantidad de campos, `a1–a5` campos | — | Envía `#`, el tipo, los campos y `\n` |
 | `mostrar_victorias` | — | — | Convierte las victorias a BCD y escribe displays y HUD |
 | `a_decimal` | `a0` número (0–99) | `a0` decenas, `a1` unidades | Restas sucesivas de 10 |
+
+La lista completa está en `ASSEMBLY/DOCUMENTATION/ASSEMBLY_DOCUMENTATION.md`. El sonido se lanza escribiendo directamente el registro del buzzer (`sw t0, BUZZER(tp)`), sin rutina propia.
 
 Para el receptor de tramas se usan, dentro del buffer de `0x2280–0x22FF`: `0x2280` cantidad de caracteres recibidos, `0x2284` largo esperado y `0x2288–0x229C` los caracteres de la trama, uno por palabra.
 
@@ -766,6 +777,7 @@ El usuario escribe la fila y la columna (0–7) y, para colocar, la orientación
 |---|---|
 | Síntesis, implementación y simulación | Vivado (misma versión del Proyecto 2) |
 | Ensamblador | RARS, con la configuración de memoria *Compact, Text at Address 0*, que ubica el código en `0x0000_0000` y los datos en `0x0000_2000`, igual que nuestro mapa. El código se exporta como texto hexadecimal para `$readmemh` |
+| Verificación del programa | Simulador de instrucciones en Python (`ASSEMBLY/SIMULATION/iss.py`) que ejecuta `programa.mem` con modelos de los periféricos y solo acepta las 27 instrucciones implementadas |
 | Aplicación de PC | Python 3 con pyserial |
 | Control de versiones | Git y GitHub: `main`, `develop` y ramas `feature/*` con pull requests |
 
@@ -780,6 +792,8 @@ El usuario escribe la fila y la columna (0–7) y, para colocar, la orientación
 7. **Síntesis, timing y simulación post-implementación**, desde que exista el primer top integrado y no solo al final.
 
 ## 14. Plan de pruebas
+
+Los testbenches de hardware están en `FPGA/SIMULATION/`, la prueba del programa en `ASSEMBLY/SIMULATION/` y la de la aplicación en `PYTHON/SIMULATION/`. La documentación de cada carpeta describe qué revisa cada prueba.
 
 | Prueba | Tipo | Criterio de aprobación |
 |---|---|---|
