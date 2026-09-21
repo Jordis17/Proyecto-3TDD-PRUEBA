@@ -14,28 +14,9 @@
 
 ---
 
-# Tabla de contenido
-
-1. Introducción
-2. Objetivos
-3. Alcance del primer avance
-4. Metodología de diseño
-5. Arquitectura general del sistema
-6. Diagrama de primer nivel
-7. Diagrama de segundo nivel
-8. Definición de módulos
-9. Interfaces principales
-10. Estrategia de implementación
-11. Organización del trabajo
-12. Estrategia de validación
-13. Siguiente avance
-14. Conclusiones
-
----
-
 # 1. Introducción
 
-El Proyecto 3 consiste en desarrollar una plataforma embebida sobre una FPGA que ejecuta un juego de Batalla Naval utilizando un microprocesador RISC‑V diseñado por el equipo. A diferencia de proyectos anteriores, la lógica principal del juego no se implementa mediante máquinas de estado dedicadas en hardware, sino mediante un programa en lenguaje ensamblador que se ejecuta sobre el procesador.
+El Proyecto 3 consiste en desarrollar una plataforma embebida sobre una FPGA que ejecuta un juego de Batalla Naval utilizando un microprocesador RISC‑V diseñado por el equipo [4]. A diferencia de proyectos anteriores, la lógica principal del juego no se implementa mediante máquinas de estado dedicadas en hardware, sino mediante un programa en lenguaje ensamblador que se ejecuta sobre el procesador.
 
 La plataforma integra memorias de programa y datos, periféricos mapeados en memoria, un controlador VGA para el Jugador 1, un periférico UART para la comunicación con una aplicación de PC correspondiente al Jugador 2, además de indicadores locales como LEDs, displays de siete segmentos y salida de sonido.
 
@@ -59,11 +40,9 @@ Diseñar la arquitectura modular del sistema Batalla Naval identificando sus blo
 
 ---
 
-# 3. Alcance del primer avance
+# 3. Idea base del avance
 
-Este documento únicamente contempla el planteamiento del diseño. No incluye la implementación del procesador ni de los periféricos, sino la propuesta de organización del sistema y la planificación del desarrollo.
-
-Los siguientes elementos forman parte de este avance:
+En este documento se desarrolla el planteamiento del diseño. No incluye la implementación del procesador ni de los periféricos, sino la propuesta de organización del sistema y la planificación del desarrollo. Comprende:
 
 - Arquitectura de primer nivel.
 - Arquitectura de segundo nivel.
@@ -76,7 +55,7 @@ Los siguientes elementos forman parte de este avance:
 
 # 4. Metodología de diseño
 
-Se utilizará la metodología de diseño modular vista en el curso, con enfoque Top‑Down.
+Se utilizará la metodología de diseño modular vista en el curso [5], con enfoque Top‑Down.
 
 La idea consiste en comenzar con la arquitectura completa del sistema y posteriormente dividirla en módulos independientes. Para cada bloque se definen su objetivo, entradas, salidas y funcionamiento general. Cada módulo será implementado y validado individualmente antes de integrarlo con el resto de la plataforma.
 
@@ -85,7 +64,7 @@ La idea consiste en comenzar con la arquitectura completa del sistema y posterio
 - Desarrollo modular.
 - Simulación independiente de bloques.
 - Integración progresiva.
-- Reutilización de módulos (por ejemplo, el UART del Proyecto 2).
+- Reutilización de módulos (por ejemplo, el UART del Proyecto 2 [9]).
 - Facilita la documentación técnica y la división del trabajo.
 
 ---
@@ -108,7 +87,7 @@ Interactúa directamente con la FPGA mediante:
 
 Interactúa mediante una aplicación desarrollada en Python que se comunica con la FPGA a través del periférico UART.
 
-El microprocesador RISC‑V ejecuta toda la lógica del juego y controla los periféricos mediante memoria mapeada: cada periférico ocupa un rango de direcciones y el procesador lo maneja con instrucciones `lw` y `sw`. Los periféricos solo realizan entrada y salida; no contienen reglas del juego.
+El microprocesador RISC‑V ejecuta toda la lógica del juego y controla los periféricos mediante memoria mapeada [1]: cada periférico ocupa un rango de direcciones y el procesador lo maneja con instrucciones `lw` y `sw`. Los periféricos solo realizan entrada y salida; no contienen reglas del juego.
 
 ---
 
@@ -124,7 +103,7 @@ Representar el sistema completo y todas sus interfaces externas.
 
 ## Descripción
 
-El sistema se implementa dentro de una FPGA Nexys 4 y recibe entradas físicas del Jugador 1. Las salidas locales permiten visualizar y seguir la partida. El Jugador 2 se comunica mediante UART utilizando una aplicación ejecutada en una computadora.
+El sistema se implementa dentro de una FPGA y recibe entradas físicas del Jugador 1. Las salidas locales permiten visualizar y seguir la partida. El Jugador 2 se comunica mediante UART utilizando una aplicación ejecutada en una computadora.
 
 ## Entradas
 
@@ -137,7 +116,7 @@ El sistema se implementa dentro de una FPGA Nexys 4 y recibe entradas físicas d
 | `sw_sel_i` | Switch SW0 | `BTN_SEL`: rotar el barco. |
 | `uart_rx_i` | Puente USB‑UART | Datos recibidos desde la PC. |
 
-La Nexys 4 tiene cinco pulsadores más el botón CPU RESET. Como el enunciado fija `BTN_RST` en el botón central y la navegación usa los otros cuatro, `BTN_OK` se asigna al botón CPU RESET y `BTN_SEL` a un switch.
+La tarjeta Nexys 4 [8] tiene cinco pulsadores más el botón CPU RESET. Como el enunciado fija `BTN_RST` en el botón central y la navegación usa los otros cuatro, `BTN_OK` se asigna al botón CPU RESET y `BTN_SEL` a un switch.
 
 ## Salidas
 
@@ -217,7 +196,7 @@ Ejecutar el programa del juego y controlar todos los periféricos.
 
 ### Función
 
-- Ejecutar las instrucciones RV32I requeridas por el enunciado.
+- Ejecutar las instrucciones RV32I requeridas por el enunciado [3], [4], siguiendo una microarquitectura basada en [1].
 - Leer instrucciones desde la ROM.
 - Leer y escribir la RAM y los periféricos mediante memoria mapeada.
 
@@ -295,6 +274,8 @@ Compara los bits altos de `DataAddress_o`, activa la escritura solo del destino 
 
 ### Mapa de memoria
 
+Según el mapa definido en el enunciado [4]:
+
 | Destino | Dirección |
 |---------|-----------|
 | RAM | `0x0000_2000–0x0000_2FFF` |
@@ -315,7 +296,7 @@ Compara los bits altos de `DataAddress_o`, activa la escritura solo del destino 
 
 ## 8.6 Interfaz común de los periféricos
 
-Los periféricos de registros (entradas, UART, displays, LEDs y buzzer) usan la interfaz estándar del enunciado:
+Los periféricos de registros (entradas, UART, displays, LEDs y buzzer) usan la interfaz estándar del enunciado [4]:
 
 | Señal | Descripción |
 |-------|-------------|
@@ -337,7 +318,7 @@ Leer las entradas del Jugador 1.
 
 ### Funciones
 
-- Sincronización y eliminación de rebotes (*debouncing*).
+- Sincronización y eliminación de rebotes (*debouncing*) [2].
 - Entrega del estado de cada entrada al procesador en un registro.
 
 ### Entradas
@@ -355,7 +336,7 @@ Leer las entradas del Jugador 1.
 
 ### Objetivo
 
-Comunicación serial con la aplicación de PC a 115200 baudios. Se reutiliza el periférico del Proyecto 2.
+Comunicación serial con la aplicación de PC a 115200 baudios. Se reutiliza el periférico del Proyecto 2 [9].
 
 ### Funciones
 
@@ -380,7 +361,7 @@ Comunicación serial con la aplicación de PC a 115200 baudios. Se reutiliza el 
 
 ### Objetivo
 
-Generar la imagen del Jugador 1 a 640 × 480 y 60 Hz.
+Generar la imagen del Jugador 1 a 640 × 480 y 60 Hz [2].
 
 ### Funciones
 
@@ -440,7 +421,7 @@ Mostrar la fase del juego.
 
 ### Objetivo
 
-Generar retroalimentación sonora. La Nexys 4 no trae un zumbador, por lo que el sonido sale por la salida de audio PWM de la tarjeta.
+Generar retroalimentación sonora. La Nexys 4 no trae un zumbador, por lo que el sonido sale por la salida de audio PWM de la tarjeta [8].
 
 ### Eventos
 
@@ -537,7 +518,7 @@ Periférico VGA.
 
 ## Etapa 6
 
-Programa en ensamblador.
+Programa en ensamblador, ensamblado con RARS [6].
 
 - Inicialización.
 - Colocación.
@@ -546,7 +527,7 @@ Programa en ensamblador.
 
 ## Etapa 7
 
-Aplicación de PC.
+Aplicación de PC en Python con pySerial [7].
 
 - Comunicación UART.
 - Interfaz del Jugador 2.
@@ -562,39 +543,7 @@ Integración completa.
 
 ---
 
-# 11. Organización del trabajo
-
-## División de tareas
-
-Cada integrante tiene a cargo un bloque de hardware y la parte del programa en ensamblador más relacionada con ese bloque.
-
-| Integrante | Módulos | Ensamblador | Revisa los PR de |
-|------------|---------|-------------|------------------|
-| Mariana Fallas | Procesador RISC‑V | Fase de batalla y fin de partida | Jordi |
-| Abner López | Periférico VGA | Pantalla y colocación del Jugador 1 | Justin |
-| Justin Garita | UART y aplicación de PC | Comunicación UART y colocación del Jugador 2 | Abner |
-| Jordi Segura | Memorias, decodificador, PLL, entradas, displays, LEDs, buzzer e integración | Inicialización, lazo principal y reinicio de partida | Mariana |
-
-La documentación (planteamiento e informe) es compartida: cada integrante redacta la parte de sus módulos.
-
-## Flujo de trabajo en el repositorio
-
-- `main`: versiones estables.
-- `develop`: rama de integración.
-- `feature/<módulo>`: una rama por funcionalidad, que se integra a `develop` mediante *pull request* revisado por otro integrante.
-- Cada tarea se registra como *issue* asignado a un integrante.
-
-## Orden de trabajo
-
-| Etapa | Actividades |
-|-------|-------------|
-| Primera | Arquitectura, diagramas, procesador base y memorias. |
-| Segunda | Periféricos: entradas, UART, displays, LEDs, buzzer y VGA. |
-| Tercera | Programa en ensamblador, aplicación Python, integración y pruebas. |
-
----
-
-# 12. Estrategia de validación
+# 11. Estrategia de validación
 
 ## Validación por módulo
 
@@ -618,22 +567,57 @@ Cada módulo tendrá un testbench autoverificable que indique PASS o FAIL en cad
 - Actualización de la pantalla VGA.
 - Estados del juego.
 - Integración de memorias y periféricos.
-- Simulación post-implementación temporizada de un fragmento del programa y de la validación de un disparo, como exige el enunciado.
+- Simulación post-implementación temporizada de un fragmento del programa y de la validación de un disparo, como exige el enunciado [4].
 - Pruebas sobre la FPGA.
 
 ---
 
-# 13. Siguiente avance
+# 12. Organización del trabajo
 
-El siguiente avance desarrollará:
+## División de tareas
 
-- Diagrama de tercer nivel de cada módulo.
-- Organización de los datos del juego en la RAM.
-- Distribución de la pantalla en *tiles* y formato de la memoria de video.
-- Protocolo de mensajes entre la FPGA y la aplicación de PC.
+Cada integrante tiene a cargo un bloque de hardware y la parte del programa en ensamblador más relacionada con ese bloque.
+
+| Integrante | Módulos | Ensamblador | Revisa los PR de |
+|------------|---------|-------------|------------------|
+| Mariana Fallas | Procesador RISC‑V | Fase de batalla y fin de partida | Jordi |
+| Abner López | Periférico VGA | Pantalla y colocación del Jugador 1 | Justin |
+| Justin Garita | UART y aplicación de PC | Comunicación UART y colocación del Jugador 2 | Abner |
+| Jordi Segura | Memorias, decodificador, PLL, entradas, displays, LEDs, buzzer e integración | Inicialización, lazo principal y reinicio de partida | Mariana |
+
+La documentación (planteamiento e informe) es compartida: cada integrante redacta la parte de sus módulos.
+
+## Flujo de trabajo en el repositorio
+
+- `main`: versiones estables.
+- `develop`: rama de integración.
+- `feature/<módulo>`: una rama por funcionalidad, que se integra a `develop` mediante *pull request* revisado por otro integrante.
+- Cada tarea se registra como *issue* asignado a un integrante.
 
 ---
 
-# 14. Conclusiones
+# 13. Conclusiones
 
 El planteamiento del diseño define una arquitectura modular para el Proyecto 3 basada en una metodología Top‑Down. La separación entre procesador, memorias y periféricos, conectados por un bus de datos con decodificador de direcciones, permitirá implementar y validar cada bloque de forma independiente antes de integrarlo en el sistema completo. La división del trabajo por módulos y el uso de ramas con revisión entre integrantes ordenan el desarrollo del equipo. Este documento constituye la base para las siguientes etapas del proyecto y para la documentación técnica final.
+
+---
+
+# Referencias
+
+[1] D. M. Harris y S. L. Harris, *Digital Design and Computer Architecture: RISC-V Edition*. Morgan Kaufmann, 2022.
+
+[2] P. P. Chu, *FPGA Prototyping by SystemVerilog Examples*. Wiley, 2018.
+
+[3] A. Waterman y K. Asanović, Eds., *The RISC-V Instruction Set Manual, Volume I: Unprivileged ISA*, Document Version 20191213. RISC-V Foundation, dic. 2019. [En línea]. Disponible: https://github.com/riscv/riscv-isa-manual/releases/download/Ratified-IMAFDQC/riscv-spec-20191213.pdf
+
+[4] J. González-Gómez y R. Coto Calderón, "Proyecto 3: Batalla Naval — Juego de dos jugadores sobre un microprocesador RISC-V con periférico VGA," EL3313 Taller de Diseño Digital, Escuela de Ingeniería Electrónica, Instituto Tecnológico de Costa Rica, II Semestre 2026.
+
+[5] M. A. Hernández R., "Diseño Modular," Laboratorio de Diseño Lógico, Escuela de Ingeniería Electrónica, Instituto Tecnológico de Costa Rica.
+
+[6] P. Sanderson, K. Vollmar y B. Landers, *RARS: RISC-V Assembler and Runtime Simulator*, versión 1.6. [En línea]. Disponible: https://github.com/TheThirdOne/rars
+
+[7] C. Liechti, *pySerial Documentation*. [En línea]. Disponible: https://pyserial.readthedocs.io
+
+[8] Digilent Inc., *Nexys 4 Reference Manual*. [En línea]. Disponible: https://digilent.com/reference/programmable-logic/nexys-4/reference-manual
+
+[9] J. González-Gómez y R. Coto Calderón, "Proyecto 2: Ahorcado — Juego electrónico FPGA/PC por enlace serial," EL3313 Taller de Diseño Digital, Escuela de Ingeniería Electrónica, Instituto Tecnológico de Costa Rica, II Semestre 2026.
